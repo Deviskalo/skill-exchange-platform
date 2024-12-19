@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid()) @map("_id")
+  email         String    @unique
+  name          String?
+  bio           String?
+  imageUrl      String?
+  skills        Skill[]   @relation("UserSkills")
+  bookings      Booking[] @relation("UserBookings")
+  teachBookings Booking[] @relation("TeacherBookings")
+  reviews       Review[]  @relation("UserReviews")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Skill {
+  id          String    @id @default(cuid()) @map("_id")
+  title       String
+  description String
+  category    String
+  tags        String[]
+  userId      String
+  user        User      @relation("UserSkills", fields: [userId], references: [id])
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Booking {
+  id         String   @id @default(cuid()) @map("_id")
+  userId     String
+  teacherId  String
+  skillId    String
+  startTime  DateTime
+  endTime    DateTime
+  status     String   @default("pending")
+  user       User     @relation("UserBookings", fields: [userId], references: [id])
+  teacher    User     @relation("TeacherBookings", fields: [teacherId], references: [id])
+  skill      Skill    @relation(fields: [skillId], references: [id])
+  review     Review?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Review {
+  id        String   @id @default(cuid()) @map("_id")
+  rating    Int
+  comment   String
+  bookingId String   @unique
+  userId    String
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  user      User     @relation("UserReviews", fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
