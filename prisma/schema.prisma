@@ -21,11 +21,22 @@ model User {
   updatedAt     DateTime  @updatedAt
 }
 
+model Category {
+  id          String   @id @default(cuid()) @map("_id")
+  name        String   @unique
+  description String
+  icon        String
+  skills      Skill[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Skill {
   id          String    @id @default(cuid()) @map("_id")
   title       String
   description String
-  category    String
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
   tags        String[]
   userId      String
   user        User      @relation("UserSkills", fields: [userId], references: [id])
@@ -35,19 +46,19 @@ model Skill {
 }
 
 model Booking {
-  id         String   @id @default(cuid()) @map("_id")
-  userId     String
-  teacherId  String
-  skillId    String
-  startTime  DateTime
-  endTime    DateTime
-  status     String   @default("pending")
-  user       User     @relation("UserBookings", fields: [userId], references: [id])
-  teacher    User     @relation("TeacherBookings", fields: [teacherId], references: [id])
-  skill      Skill    @relation(fields: [skillId], references: [id])
-  review     Review?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid()) @map("_id")
+  userId    String
+  teacherId String
+  skillId   String
+  startTime DateTime
+  endTime   DateTime
+  status    String   @default("pending")
+  user      User     @relation("UserBookings", fields: [userId], references: [id])
+  teacher   User     @relation("TeacherBookings", fields: [teacherId], references: [id])
+  skill     Skill    @relation(fields: [skillId], references: [id])
+  review    Review?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Review {

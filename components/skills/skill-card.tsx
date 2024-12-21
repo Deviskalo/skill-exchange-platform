@@ -10,7 +10,7 @@ import { Skill } from "@prisma/client";
 interface SkillCardProps {
   skill: Skill & {
     user: {
-      name: string;
+      name: string | null;
       imageUrl: string | null;
     };
   };
@@ -23,11 +23,11 @@ export function SkillCard({ skill }: SkillCardProps) {
         <div className="flex items-center gap-4">
           <Avatar>
             <AvatarImage src={skill.user.imageUrl || undefined} />
-            <AvatarFallback>{skill.user.name?.[0]}</AvatarFallback>
+            <AvatarFallback>{skill.user.name?.[0] || 'U'}</AvatarFallback>
           </Avatar>
           <div>
             <CardTitle className="text-lg">{skill.title}</CardTitle>
-            <p className="text-sm text-muted-foreground">{skill.user.name}</p>
+            <p className="text-sm text-muted-foreground">{skill.user.name || 'Unknown User'}</p>
           </div>
         </div>
       </CardHeader>
