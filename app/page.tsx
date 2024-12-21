@@ -49,6 +49,11 @@ export default async function Home() {
           imageUrl: true,
         },
       },
+      category: {
+        select: {
+          name: true,
+        },
+      },
     },
   });
 
@@ -148,7 +153,7 @@ export default async function Home() {
                 <CardHeader>
                   <CardTitle>{skill.title}</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {skill.category}
+                    {skill.category.name}
                   </p>
                 </CardHeader>
                 <CardContent>
