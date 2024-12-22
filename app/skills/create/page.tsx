@@ -99,12 +99,19 @@ export default function CreateSkillPage() {
     }
 
     try {
-      const newSkill = await prisma.skill.create({
-        data: {
-          ...data,
-          userId: currentUser.uid,
+      const response = await fetch("/api/skills", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify(data),
       });
+
+      if (!response.ok) {
+        throw new Error("Failed to create skill");
+      }
+
+      const newSkill = await response.json();
 
       toast({
         title: "Skill Created",
@@ -118,6 +125,7 @@ export default function CreateSkillPage() {
         title: "Error",
         description: "Failed to create skill",
       });
+      console.error(error);
     }
   };
 

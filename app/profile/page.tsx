@@ -125,84 +125,47 @@ export default function ProfilePage() {
         return;
       }
 
-      console.log("Current user:", user);
-      console.log("Name to update:", name);
+      let downloadURL = previewAvatar;
 
-      // Update profile in Firebase Authentication
-      await updateProfile(user, {
-        displayName: name,
-        ...(previewAvatar && { photoURL: previewAvatar }),
-      });
-
-      console.log("Firebase profile updated");
-
-      // Update avatar if selected
+      // Upload avatar if a new file is selected
       if (avatar) {
         const storageRef = ref(storage, `avatars/${user.uid}`);
-
-        try {
-          // Upload the file
-          const snapshot = await uploadBytes(storageRef, avatar);
-          console.log("Avatar uploaded successfully");
-
-          // Get download URL
-          const downloadURL = await getDownloadURL(storageRef);
-          console.log("Avatar download URL:", downloadURL);
-
-          // Update profile with new photo URL
-          await updateProfile(user, { photoURL: downloadURL });
-
-          // Update Firestore user document
-          const userQuery = query(
-            collection(db, "users"),
-            where("uid", "==", user.uid)
-          );
-
-          const querySnapshot = await getDocs(userQuery);
-          if (!querySnapshot.empty) {
-            const userDoc = querySnapshot.docs[0];
-            await updateDoc(userDoc.ref, {
-              name,
-              photoURL: downloadURL,
-            });
-            console.log("Firestore user document updated");
-          } else {
-            console.error("No user document found in Firestore");
-          }
-
-          setPreviewAvatar(downloadURL);
-        } catch (uploadError: unknown) {
-          console.error("Avatar upload error:", uploadError);
-          setError(
-            uploadError instanceof Error
-              ? getFirebaseErrorMessage(uploadError)
-              : "Failed to upload avatar. Please try again."
-          );
-          return;
-        }
-      } else {
-        // If no new avatar, just update name in Firestore
-        const userQuery = query(
-          collection(db, "users"),
-          where("uid", "==", user.uid)
-        );
-
-        const querySnapshot = await getDocs(userQuery);
-        if (!querySnapshot.empty) {
-          const userDoc = querySnapshot.docs[0];
-          await updateDoc(userDoc.ref, { name });
-          console.log("Firestore user name updated");
-        } else {
-          console.error("No user document found in Firestore");
-        }
+        const snapshot = await uploadBytes(storageRef, avatar);
+        downloadURL = await getDownloadURL(storageRef);
       }
+
+      // Send update to server
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          ...(downloadURL && { photoURL: downloadURL }),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+
+      // Update local Firebase profile
+      await updateProfile(user, {
+        displayName: name,
+        ...(downloadURL && { photoURL: downloadURL }),
+      });
 
       setSuccess("Profile updated successfully!");
       setError("");
-    } catch (err: any) {
-      console.error("Full update error:", err);
-      setError(getFirebaseErrorMessage(err));
-      setSuccess("");
+      setPreviewAvatar(downloadURL);
+    } catch (error) {
+      console.error("Profile update error:", error);
+      setError(
+        error instanceof Error
+          ? getFirebaseErrorMessage(error)
+          : "Failed to update profile. Please try again."
+      );
     }
   };
 
