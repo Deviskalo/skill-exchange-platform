@@ -1,10 +1,7 @@
-/** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   images: { unoptimized: true },
+  transpilePackages: ['@radix-ui/react-alert-dialog'],
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/auth";
 import { Button } from "@/components/ui/button";
@@ -11,10 +12,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { BookOpen, LogOut, User } from "lucide-react";
+import { BookOpen, LogOut, User, Menu, X } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Moon, Sun } from "lucide-react";
 
 export default function Navbar() {
   const [user] = useAuthState(auth);
+  const { theme, setTheme } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
   return (
     <nav className="border-b fixed top-0 inset-x-0 bg-background/60 backdrop-blur z-50">
@@ -40,7 +53,21 @@ export default function Navbar() {
               </Link>
             </div>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
+            {/* Theme Toggle Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              aria-label="Toggle Theme"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -51,16 +78,15 @@ export default function Navbar() {
                     </AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile">
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
-                    </Link>
+                <DropdownMenuContent>
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    <Link href="/profile">Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => auth.signOut()}
-                    className="text-red-600"
+                    onClick={() => {
+                      auth.signOut();
+                    }}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
@@ -68,17 +94,58 @@ export default function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex space-x-4">
-                <Button variant="ghost" asChild>
-                  <Link href="/login">Login</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/signup">Sign Up</Link>
-                </Button>
-              </div>
+              <Link href="/login">
+                <Button>Login</Button>
+              </Link>
             )}
+
+            {/* Mobile Menu Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="sm:hidden"
+              onClick={toggleMobileMenu}
+              aria-label="Toggle Mobile Menu"
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </Button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="sm:hidden absolute top-16 inset-x-0 bg-background border-b">
+            <div className="px-4 pt-2 pb-3 space-y-1">
+              <Link
+                href="/skills"
+                className="block px-3 py-2 text-base font-medium"
+                onClick={toggleMobileMenu}
+              >
+                Browse Skills
+              </Link>
+              <Link
+                href="/teach"
+                className="block px-3 py-2 text-base font-medium"
+                onClick={toggleMobileMenu}
+              >
+                Teach
+              </Link>
+              {!user && (
+                <Link
+                  href="/login"
+                  className="block px-3 py-2 text-base font-medium"
+                  onClick={toggleMobileMenu}
+                >
+                  Login
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

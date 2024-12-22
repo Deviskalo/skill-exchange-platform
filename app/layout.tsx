@@ -7,7 +7,7 @@ import Navbar from "@/components/navbar";
 import { Footer } from "@/components/layout/footer";
 import { AuthStateListener } from "@/components/auth/auth-state-listener";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   title: "SkillSwap - Exchange Skills & Learn Together",

@@ -16,10 +16,7 @@ import {
 } from "@/components/ui/form";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { 
-  signInWithEmailAndPassword, 
-  signInWithPopup 
-} from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider, githubProvider } from "@/lib/firebase";
 import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
@@ -66,7 +63,7 @@ export default function LoginPage() {
   return (
     <div className="max-w-md mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <h1 className="text-4xl font-bold mb-8">Sign In</h1>
-      
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
@@ -97,9 +94,7 @@ export default function LoginPage() {
             )}
           />
 
-          {error && (
-            <div className="text-destructive text-sm">{error}</div>
-          )}
+          {error && <div className="text-destructive text-sm">{error}</div>}
 
           <Button type="submit" className="w-full">
             Sign In
@@ -119,16 +114,16 @@ export default function LoginPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 mt-4">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => handleSocialLogin(googleProvider)}
           className="w-full"
         >
           <FcGoogle className="mr-2 h-4 w-4" />
           Google
         </Button>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => handleSocialLogin(githubProvider)}
           className="w-full"
         >
@@ -138,11 +133,11 @@ export default function LoginPage() {
       </div>
 
       <div className="text-center mt-4">
-        <Link 
-          href="/signup" 
+        <Link
+          href="/signup"
           className="text-sm text-muted-foreground hover:underline"
         >
-          Don't have an account? Sign up
+          Don&apos;t have an account? Sign up
         </Link>
       </div>
     </div>
