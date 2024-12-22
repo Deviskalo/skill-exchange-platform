@@ -52,7 +52,21 @@ export default function LoginPage() {
 
   const handleSocialLogin = async (provider: any) => {
     try {
-      await signInWithPopup(auth, provider);
+      const userCredential = await signInWithPopup(auth, provider);
+      const user = userCredential.user;
+
+      // Get the Firebase ID token
+      const token = await user.getIdToken();
+
+      // Set session cookie
+      await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token }),
+      });
+
       router.push("/");
     } catch (error: any) {
       setError("Social login failed");
