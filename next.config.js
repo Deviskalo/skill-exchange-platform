@@ -1,5 +1,4 @@
 const nextConfig = {
-  output: 'export',
   images: { unoptimized: true },
   transpilePackages: ['@radix-ui/react-alert-dialog'],
   webpack: (config) => {
