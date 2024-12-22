@@ -31,7 +31,9 @@ export default function RootLayout({
           <AuthStateListener />
           <div className="flex flex-col min-h-screen">
             <Navbar />
-            <main className="flex-1 bg-background">{children}</main>
+            <main className="flex-1 bg-background container mx-auto px-4 pt-20">
+              {children}
+            </main>
             <Footer />
           </div>
           <Toaster />

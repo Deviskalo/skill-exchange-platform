@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { prisma } from "@/lib/prisma";
 import { getAuth } from "firebase/auth";
+import { prisma } from "@/lib/prisma";
 import { useToast } from "@/hooks/use-toast";
+import { useFormSubmission } from "@/hooks/useFormSubmission";
 
 import {
   Form,
@@ -37,16 +37,20 @@ const skillSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 
+type SkillData = z.infer<typeof skillSchema>;
+type CreatedSkill = { id: string } & SkillData;
+
 export default function CreateSkillPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState<string>("");
-  const router = useRouter();
   const auth = getAuth();
   const currentUser = auth.currentUser;
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof skillSchema>>({
+  const { submitForm, isSubmitting } = useFormSubmission<CreatedSkill>();
+
+  const form = useForm<SkillData>({
     resolver: zodResolver(skillSchema),
     defaultValues: {
       title: "",
@@ -88,7 +92,7 @@ export default function CreateSkillPage() {
     form.setValue("tags", newTags);
   };
 
-  const onSubmit = async (data: z.infer<typeof skillSchema>) => {
+  const onSubmit = async (data: SkillData) => {
     if (!currentUser) {
       toast({
         variant: "destructive",
@@ -99,33 +103,17 @@ export default function CreateSkillPage() {
     }
 
     try {
-      const response = await fetch("/api/skills", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+      await submitForm(data, {
+        endpoint: "/api/skills",
+        successMessage: "Your skill has been successfully created",
+        redirectPath: (skill) => `/skills/${skill.id}`,
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to create skill");
-      }
-
-      const newSkill = await response.json();
-
-      toast({
-        title: "Skill Created",
-        description: "Your skill has been successfully created",
-      });
-
-      router.push(`/skills/${newSkill.id}`);
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create skill",
+        description: (error as Error).message,
       });
-      console.error(error);
     }
   };
 
@@ -227,8 +215,8 @@ export default function CreateSkillPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full">
-            Create Skill
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Creating Skill..." : "Create Skill"}
           </Button>
         </form>
       </Form>

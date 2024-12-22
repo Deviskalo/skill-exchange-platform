@@ -1,6 +1,7 @@
-// app/api/seed/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+// scripts/seed.ts
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const categories = [
   {
@@ -69,36 +70,24 @@ const categories = [
   },
 ];
 
-export async function GET(request: NextRequest) {
-  try {
-    // Delete existing categories to prevent duplicates
-    await prisma.category.deleteMany();
+async function main() {
+  // Clear existing categories
+  await prisma.category.deleteMany();
 
-    // Create new categories
-    const createdCategories = await Promise.all(
-      categories.map((category) =>
-        prisma.category.create({
-          data: {
-            name: category.name,
-            description: category.description,
-            icon: category.icon,
-          },
-        })
-      )
-    );
-
-    return NextResponse.json({
-      message: "Categories seeded successfully",
-      categories: createdCategories,
-    });
-  } catch (error) {
-    console.error("Seeding error:", error);
-    return NextResponse.json(
-      {
-        error: "Failed to seed categories",
-        details: error instanceof Error ? error.message : "Unknown error",
+  // Seed new categories
+  for (const category of categories) {
+    await prisma.category.create({
+      data: {
+        name: category.name,
+        description: category.description,
+        icon: category.icon,
       },
-      { status: 500 }
-    );
+    });
   }
+
+  console.log("Categories seeded successfully");
 }
+
+main()
+  .catch(console.error)
+  .finally(async () => await prisma.$disconnect());
