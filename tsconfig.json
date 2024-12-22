@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "radix-ui-alert-dialog.d.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "radix-ui-alert-dialog.d.ts", "next-themes.d.ts"],
   "exclude": ["node_modules"]
 }
