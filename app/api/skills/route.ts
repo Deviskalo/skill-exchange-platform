@@ -1,77 +1,42 @@
-// app/api/skills/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { getSessionUser } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
-import { getAuth } from "firebase-admin/auth";
+import { skillSchema } from "@/lib/validations/skill";
 
 export async function POST(request: NextRequest) {
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await request.json().catch(() => null);
+  const parsed = skillSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid skill data" }, { status: 400 });
+  }
+
+  const category = await prisma.category.findUnique({
+    where: { id: parsed.data.categoryId },
+    select: { id: true },
+  });
+  if (!category) {
+    return NextResponse.json({ error: "Category not found" }, { status: 400 });
+  }
+
   try {
-    // Log all incoming request details
-    console.log(
-      "Skill Creation Request Headers:",
-      Object.fromEntries(request.headers)
-    );
-    console.log("Skill Creation Request Cookies:", request.cookies);
-
-    // Verify the session cookie
-    const sessionCookie = request.cookies.get("session")?.value;
-    console.log("Session Cookie:", sessionCookie);
-
-    if (!sessionCookie) {
-      console.error("No session cookie found");
-      return NextResponse.json(
-        { error: "Unauthorized: No session" },
-        { status: 401 }
-      );
-    }
-
-    // Verify the session
-    let decodedToken;
-    try {
-      decodedToken = await getAuth().verifySessionCookie(sessionCookie, true);
-      console.log("Decoded Token:", decodedToken);
-    } catch (verifyError) {
-      console.error("Session verification error:", verifyError);
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-    }
-
-    const userId = decodedToken.uid;
-    console.log("User ID:", userId);
-
-    // Parse the request body
-    const body = await request.json();
-    console.log("Request Body:", body);
-
-    const { title, description, categoryId, tags } = body;
-
-    // Validate input
-    if (!title || !description || !categoryId) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-
-    // Create the skill
-    const newSkill = await prisma.skill.create({
+    const skill = await prisma.skill.create({
       data: {
-        title,
-        description,
-        categoryId,
-        tags: tags || [],
-        userId,
+        ...parsed.data,
+        userId: user.id,
       },
+      select: { id: true },
     });
 
-    console.log("Skill Created:", newSkill);
-
-    return NextResponse.json(newSkill, { status: 201 });
+    return NextResponse.json(skill, { status: 201 });
   } catch (error) {
     console.error("Skill creation error:", error);
     return NextResponse.json(
-      {
-        error: "Failed to create skill",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Failed to create skill" },
       { status: 500 }
     );
   }

@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { Skill } from "@prisma/client";
+import type { Skill } from "@prisma/client";
 
 interface SkillCardProps {
   skill: Skill & {

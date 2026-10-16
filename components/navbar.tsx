@@ -84,8 +84,12 @@ export default function Navbar() {
                     <Link href="/profile">Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => {
-                      auth.signOut();
+                    onClick={async () => {
+                      try {
+                        await fetch("/api/login", { method: "DELETE" });
+                      } finally {
+                        await auth.signOut();
+                      }
                     }}
                   >
                     <LogOut className="mr-2 h-4 w-4" />

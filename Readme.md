@@ -64,16 +64,25 @@ cp .env.example .env
 
 ```
 # Database
-DATABASE_URL="your_mongodb_url"
+DATABASE_URL="mongodb+srv://<username>:<password>@<cluster>/<database>?retryWrites=true&w=majority"
 
-# Firebase
+# Firebase client configuration
 NEXT_PUBLIC_FIREBASE_API_KEY=
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
+
+# Firebase Admin SDK service account (server-only)
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 ```
+
+The Admin SDK values are required for server-side session cookies and should
+come from a Firebase service account. Do not expose them with `NEXT_PUBLIC_`
+prefixes or commit the populated `.env` file.
 
 5. Initialize the database
 

@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider, githubProvider } from "@/lib/firebase";
+import { establishSession } from "@/lib/firebase/session";
 import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 
@@ -32,6 +33,15 @@ export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState("");
 
+  const getDestination = () => {
+    const returnUrl = new URLSearchParams(window.location.search).get(
+      "returnUrl"
+    );
+    return returnUrl?.startsWith("/") && !returnUrl.startsWith("//")
+      ? returnUrl
+      : "/";
+  };
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -42,8 +52,13 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
-      router.push("/");
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
+      await establishSession(credential.user);
+      router.push(getDestination());
     } catch (error: any) {
       setError("Invalid login credentials");
       console.error(error);
@@ -53,21 +68,8 @@ export default function LoginPage() {
   const handleSocialLogin = async (provider: any) => {
     try {
       const userCredential = await signInWithPopup(auth, provider);
-      const user = userCredential.user;
-
-      // Get the Firebase ID token
-      const token = await user.getIdToken();
-
-      // Set session cookie
-      await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token }),
-      });
-
-      router.push("/");
+      await establishSession(userCredential.user);
+      router.push(getDestination());
     } catch (error: any) {
       setError("Social login failed");
       console.error(error);

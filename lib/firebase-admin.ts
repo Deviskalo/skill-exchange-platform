@@ -1,3 +1,5 @@
+import "server-only";
+
 import admin from "firebase-admin";
 
 const serviceAccountConfig = {

@@ -17,10 +17,13 @@ import {
 } from "@/components/ui/form";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  updateProfile,
+} from "firebase/auth";
 import { auth, googleProvider, githubProvider } from "@/lib/firebase";
-import { addDoc, collection } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { establishSession } from "@/lib/firebase/session";
 import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 
@@ -43,8 +46,6 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
-  const [githubProvider, setGithubProvider] = useState(null);
-  const [googleProvider, setGoogleProvider] = useState(null);
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -79,17 +80,12 @@ export default function SignupPage() {
         data.password
       );
       const user = userCredential.user;
-
-      // Add additional user details to Firestore
-      await addDoc(collection(db, "users"), {
-        uid: user.uid,
-        email: data.email,
+      await updateProfile(user, { displayName: data.name });
+      await establishSession(user, {
         name: data.name,
         bio: data.bio || "",
-        skills: data.skills || [],
-        createdAt: new Date()
+        learningInterests: data.skills || [],
       });
-
       router.push("/");
     } catch (error: any) {
       setError(error.message);
@@ -100,15 +96,7 @@ export default function SignupPage() {
   const handleSocialSignUp = async (provider: any) => {
     try {
       const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      await addDoc(collection(db, "users"), {
-        uid: user.uid,
-        email: user.email,
-        name: user.displayName,
-        bio: "",
-        skills: [],
-        createdAt: new Date()
-      });
+      await establishSession(result.user);
       router.push("/");
     } catch (error: any) {
       setError(error.message);

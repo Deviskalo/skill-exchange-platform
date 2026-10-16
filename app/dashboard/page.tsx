@@ -1,5 +1,8 @@
-"use client";
-
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -9,239 +12,165 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import { getSessionUser } from "@/lib/auth/server";
+import { prisma } from "@/lib/prisma";
 
-import {
-  getAuth,
-  onAuthStateChanged,
-  User as FirebaseUser,
-} from "firebase/auth";
-import {
-  doc,
-  getFirestore,
-  getDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  DocumentData,
-} from "firebase/firestore";
-
-import { useState, useEffect } from "react";
-import { app } from "@/lib/firebase"; // Adjust import path as needed
-
-// Define interfaces for type safety
-interface Skill {
-  id: string;
-  name: string;
-  proficiency?: number;
-}
-
-interface SkillExchange {
-  id: string;
-  partnerName: string;
-  skill: string;
-  date: string;
-  status: "Pending" | "Confirmed" | "Cancelled";
-}
-
-export default function DashboardPage() {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [exchanges, setExchanges] = useState<SkillExchange[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        try {
-          setUser(currentUser);
-
-          // Fetch user skills
-          const skillsQuery = query(
-            collection(db, "skills"),
-            where("userId", "==", currentUser.uid)
-          );
-          const skillsSnapshot = await getDocs(skillsQuery);
-          setSkills(
-            skillsSnapshot.docs.map(
-              (doc) =>
-                ({
-                  id: doc.id,
-                  ...doc.data(),
-                } as Skill)
-            )
-          );
-
-          // Fetch skill exchanges
-          const exchangesQuery = query(
-            collection(db, "exchanges"),
-            where("userId", "==", currentUser.uid)
-          );
-          const exchangesSnapshot = await getDocs(exchangesQuery);
-          setExchanges(
-            exchangesSnapshot.docs.map(
-              (doc) =>
-                ({
-                  id: doc.id,
-                  ...doc.data(),
-                } as SkillExchange)
-            )
-          );
-        } catch (error) {
-          console.error("Error fetching dashboard data:", error);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        // Redirect to login if no user is authenticated
-        redirect("/login");
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (loading) {
-    return <div className="container mx-auto p-6">Loading...</div>;
-  }
-
+export default async function DashboardPage() {
+  const user = await getSessionUser();
   if (!user) {
-    return null; // Redirect handled in useEffect
+    redirect("/login?returnUrl=%2Fdashboard");
   }
+
+  const [skills, bookings] = await Promise.all([
+    prisma.skill.findMany({
+      where: { userId: user.id },
+      include: { category: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.booking.findMany({
+      where: { OR: [{ userId: user.id }, { teacherId: user.id }] },
+      include: {
+        user: { select: { name: true } },
+        teacher: { select: { name: true } },
+        skill: { select: { title: true } },
+      },
+      orderBy: { startTime: "asc" },
+    }),
+  ]);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* User Profile Card */}
+    <div className="container mx-auto space-y-6 p-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <Card className="md:col-span-1">
           <CardHeader>
             <CardTitle>Profile Overview</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
-            <Avatar className="w-24 h-24 mb-4">
+            <Avatar className="mb-4 h-24 w-24">
               <AvatarImage
-                src={user.photoURL || "/default-avatar.png"}
-                alt={user.displayName || "User Profile"}
+                src={user.imageUrl || "/default-avatar.png"}
+                alt={user.name || "User profile"}
               />
-              <AvatarFallback>
-                {user.displayName?.charAt(0) || "U"}
-              </AvatarFallback>
+              <AvatarFallback>{user.name?.charAt(0) || "U"}</AvatarFallback>
             </Avatar>
-            <h2 className="text-xl font-bold">{user.displayName}</h2>
+            <h2 className="text-xl font-bold">{user.name || "SkillSwap user"}</h2>
             <p className="text-muted-foreground">{user.email}</p>
-
             <div className="mt-4 w-full space-y-2">
               <div className="flex justify-between">
-                <span>Skills Learned</span>
+                <span>Skills Offered</span>
                 <Badge variant="secondary">{skills.length}</Badge>
               </div>
               <div className="flex justify-between">
-                <span>Skill Exchanges</span>
-                <Badge variant="secondary">{exchanges.length}</Badge>
+                <span>Bookings</span>
+                <Badge variant="secondary">{bookings.length}</Badge>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Skills Overview */}
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>My Skills</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Skill</TableHead>
-                  <TableHead>Proficiency</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {skills.map((skill) => (
-                  <TableRow key={skill.id}>
-                    <TableCell>{skill.name}</TableCell>
-                    <TableCell>
-                      <Progress value={skill.proficiency || 0} />
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm">
-                        Details
-                      </Button>
-                    </TableCell>
+            {skills.length === 0 ? (
+              <p className="text-muted-foreground">
+                You haven&apos;t listed any skills yet.
+              </p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Skill</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {skills.map((skill) => (
+                    <TableRow key={skill.id}>
+                      <TableCell>{skill.title}</TableCell>
+                      <TableCell>{skill.category.name}</TableCell>
+                      <TableCell>
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/skills/${skill.id}`}>Details</Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Upcoming Exchanges */}
       <Card>
         <CardHeader>
           <CardTitle>Upcoming Skill Exchanges</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Partner</TableHead>
-                <TableHead>Skill</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {exchanges.map((exchange) => (
-                <TableRow key={exchange.id}>
-                  <TableCell>{exchange.partnerName}</TableCell>
-                  <TableCell>{exchange.skill}</TableCell>
-                  <TableCell>{exchange.date}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        exchange.status === "Confirmed"
-                          ? "default"
-                          : exchange.status === "Pending"
-                          ? "secondary"
-                          : "destructive"
-                      }
-                    >
-                      {exchange.status}
-                    </Badge>
-                  </TableCell>
+          {bookings.length === 0 ? (
+            <p className="text-muted-foreground">You have no bookings yet.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Partner</TableHead>
+                  <TableHead>Skill</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {bookings.map((booking) => {
+                  const partner =
+                    booking.userId === user.id ? booking.teacher : booking.user;
+                  const status = booking.status.toLowerCase();
+
+                  return (
+                    <TableRow key={booking.id}>
+                      <TableCell>{partner.name || "SkillSwap user"}</TableCell>
+                      <TableCell>{booking.skill.title}</TableCell>
+                      <TableCell>
+                        {booking.startTime.toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            status === "confirmed"
+                              ? "default"
+                              : status === "cancelled"
+                                ? "destructive"
+                                : "secondary"
+                          }
+                        >
+                          {booking.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
       <Card>
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
-        <CardContent className="flex space-x-4">
-          <Link href="/skills/learn">
-            <Button>Find a Skill to Learn</Button>
-          </Link>
-          <Link href="/skills/teach">
-            <Button variant="secondary">Offer a Skill</Button>
-          </Link>
-          <Link href="/profile">
-            <Button variant="outline">Edit Profile</Button>
-          </Link>
+        <CardContent className="flex flex-wrap gap-4">
+          <Button asChild>
+            <Link href="/skills">Find a Skill to Learn</Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link href="/skills/create">Offer a Skill</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/profile">Edit Profile</Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

@@ -1,96 +1,57 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { getAuth } from "firebase/auth";
-import Image from "next/image";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSessionUser } from "@/lib/auth/server";
+import { prisma } from "@/lib/prisma";
 
-export default function SkillDetailsPage() {
-  const params = useParams();
-  const [skill, setSkill] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const auth = getAuth();
-  const currentUser = auth.currentUser;
-
-  useEffect(() => {
-    const fetchSkillDetails = async () => {
-      try {
-        const skillId = params.id as string;
-        const fetchedSkill = await prisma.skill.findUnique({
-          where: { id: skillId },
-          include: {
-            category: true,
-            user: true, // Include user details
-          },
-        });
-
-        if (!fetchedSkill) {
-          setError("Skill not found");
-          return;
-        }
-
-        setSkill(fetchedSkill);
-      } catch (err) {
-        console.error("Error fetching skill details:", err);
-        setError("Failed to load skill details");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSkillDetails();
-  }, [params.id]);
-
-  if (loading) {
-    return <div>Loading skill details...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
-  }
+export default async function SkillDetailsPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const [skill, currentUser] = await Promise.all([
+    prisma.skill.findUnique({
+      where: { id: params.id },
+      include: { category: true, user: true },
+    }),
+    getSessionUser(),
+  ]);
 
   if (!skill) {
-    return <div>No skill found</div>;
+    notFound();
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <Card>
         <CardHeader>
-          <CardTitle className="flex justify-between items-center">
+          <CardTitle className="flex items-center justify-between">
             <span>{skill.title}</span>
-            {currentUser?.uid === skill.userId && (
-              <Link href={`/skills/edit/${skill.id}`}>
-                <Button variant="outline" size="sm">
-                  Edit Skill
-                </Button>
-              </Link>
+            {currentUser?.id === skill.userId && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/skills/edit/${skill.id}`}>Edit Skill</Link>
+              </Button>
             )}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
-              <h3 className="font-semibold">Description</h3>
+              <h2 className="font-semibold">Description</h2>
               <p className="text-muted-foreground">{skill.description}</p>
             </div>
-
-            <div className="flex items-center space-x-2">
-              <h3 className="font-semibold">Category:</h3>
+            <div className="flex items-center gap-2">
+              <h2 className="font-semibold">Category:</h2>
               <Badge variant="secondary">{skill.category.name}</Badge>
             </div>
-
-            {skill.tags && skill.tags.length > 0 && (
+            {skill.tags.length > 0 && (
               <div>
-                <h3 className="font-semibold mb-2">Tags</h3>
+                <h2 className="mb-2 font-semibold">Tags</h2>
                 <div className="flex flex-wrap gap-2">
-                  {skill.tags.map((tag: string) => (
+                  {skill.tags.map((tag) => (
                     <Badge key={tag} variant="outline">
                       {tag}
                     </Badge>
@@ -98,29 +59,26 @@ export default function SkillDetailsPage() {
                 </div>
               </div>
             )}
-
             <div>
-              <h3 className="font-semibold">Created By</h3>
-              <div className="flex items-center space-x-2">
+              <h2 className="font-semibold">Created By</h2>
+              <div className="flex items-center gap-2">
                 {skill.user.imageUrl && (
                   <Image
                     src={skill.user.imageUrl}
                     width={40}
                     height={40}
                     alt={skill.user.name || "User"}
-                    className="w-10 h-10 rounded-full"
+                    className="h-10 w-10 rounded-full"
                   />
                 )}
                 <span>{skill.user.name || "Anonymous"}</span>
               </div>
             </div>
-
             <div className="text-sm text-muted-foreground">
-              Created: {new Date(skill.createdAt).toLocaleDateString()}
-              {skill.createdAt !== skill.updatedAt && (
+              Created: {skill.createdAt.toLocaleDateString()}
+              {skill.createdAt.getTime() !== skill.updatedAt.getTime() && (
                 <span className="ml-2">
-                  (Last updated:{" "}
-                  {new Date(skill.updatedAt).toLocaleDateString()})
+                  (Last updated: {skill.updatedAt.toLocaleDateString()})
                 </span>
               )}
             </div>

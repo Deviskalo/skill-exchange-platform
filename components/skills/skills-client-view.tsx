@@ -2,9 +2,9 @@
 
 import React from "react";
 import { SkillCard } from "./skill-card";
-import { Skill as PrismaSKill } from "@prisma/client";
+import type { Skill as PrismaSkill } from "@prisma/client";
 
-interface Skill extends PrismaSKill {
+interface Skill extends PrismaSkill {
   id: string;
   title: string;
   name: string;

@@ -1,55 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuth } from "firebase-admin/auth";
-import { db } from "@/lib/firebase";
-import {
-  doc,
-  updateDoc,
-  query,
-  collection,
-  where,
-  getDocs,
-} from "firebase/firestore";
+import { getSessionUser } from "@/lib/auth/server";
+import { z } from "zod";
+
+const profileSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  photoURL: z.string().url().optional(),
+});
 
 export async function PUT(request: NextRequest) {
   try {
-    // Verify the session cookie
-    const sessionCookie = request.cookies.get("session")?.value;
-    if (!sessionCookie) {
+    const user = await getSessionUser();
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Verify the session
-    const decodedToken = await getAuth().verifySessionCookie(
-      sessionCookie,
-      true
-    );
-    const userId = decodedToken.uid;
-
-    // Parse the request body
-    const { name, photoURL } = await request.json();
-
-    // Update Firestore user document
-    const userQuery = query(
-      collection(db, "users"),
-      where("uid", "==", userId)
-    );
-
-    const querySnapshot = await getDocs(userQuery);
-    if (!querySnapshot.empty) {
-      const userDoc = querySnapshot.docs[0];
-      await updateDoc(userDoc.ref, {
-        name,
-        ...(photoURL && { photoURL }),
-      });
+    const parsed = profileSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid profile data" },
+        { status: 400 }
+      );
     }
 
-    // Update Prisma user
     await prisma.user.update({
-      where: { id: userId },
+      where: { id: user.id },
       data: {
-        name,
-        ...(photoURL && { imageUrl: photoURL }),
+        name: parsed.data.name,
+        ...(parsed.data.photoURL && { imageUrl: parsed.data.photoURL }),
       },
     });
 

@@ -13,31 +13,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
-import { auth } from "@/lib/firebase";
 import { HeroSection } from "@/components/home/hero-section";
 import { CategoryCard } from "@/components/home/category-card";
 
 export default async function Home() {
-  // Get the current authenticated user from Firebase
-  const firebaseUser = auth.currentUser;
-
-  // If Firebase user exists but not in Prisma, create a user
-  if (firebaseUser) {
-    const existingUser = await prisma.user.findUnique({
-      where: { email: firebaseUser.email || undefined },
-    });
-
-    if (!existingUser) {
-      await prisma.user.create({
-        data: {
-          email: firebaseUser.email || "",
-          name: firebaseUser.displayName || "",
-          imageUrl: firebaseUser.photoURL || "/default-avatar.png",
-        },
-      });
-    }
-  }
-
   // Fetch recent skills and top contributors
   const recentSkills = await prisma.skill.findMany({
     take: 4,
