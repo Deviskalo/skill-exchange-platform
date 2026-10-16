@@ -86,8 +86,6 @@
     "typescript": "^5.4.2"
   },
   "prisma": {
-    "scripts": {
-      "db:seed": "ts-node --esm ./scripts/seed.ts"
-    }
+    "seed": "ts-node --esm ./script/seed.ts"
   }
 }
