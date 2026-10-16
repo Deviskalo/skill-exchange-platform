@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { getSessionUser } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
+import { BookingActions } from "@/components/bookings/booking-actions";
 
 export default async function DashboardPage() {
   const user = await getSessionUser();
@@ -107,19 +108,22 @@ export default async function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Upcoming Skill Exchanges</CardTitle>
+          <CardTitle>My Bookings</CardTitle>
         </CardHeader>
         <CardContent>
           {bookings.length === 0 ? (
-            <p className="text-muted-foreground">You have no bookings yet.</p>
+            <p className="text-muted-foreground">
+              You have no bookings yet. Request a session from a skill listing.
+            </p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Partner</TableHead>
                   <TableHead>Skill</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead>Start time</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -131,7 +135,14 @@ export default async function DashboardPage() {
                   return (
                     <TableRow key={booking.id}>
                       <TableCell>{partner.name || "SkillSwap user"}</TableCell>
-                      <TableCell>{booking.skill.title}</TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/skills/${booking.skillId}`}
+                          className="text-primary underline"
+                        >
+                          {booking.skill.title}
+                        </Link>
+                      </TableCell>
                       <TableCell>
                         {booking.startTime.toLocaleString()}
                       </TableCell>
@@ -140,13 +151,20 @@ export default async function DashboardPage() {
                           variant={
                             status === "confirmed"
                               ? "default"
-                              : status === "cancelled"
+                              : status === "cancelled" || status === "declined"
                                 ? "destructive"
                                 : "secondary"
                           }
                         >
                           {booking.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <BookingActions
+                          bookingId={booking.id}
+                          isTeacher={booking.teacherId === user.id}
+                          status={booking.status}
+                        />
                       </TableCell>
                     </TableRow>
                   );

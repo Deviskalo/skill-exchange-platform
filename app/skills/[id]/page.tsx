@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSessionUser } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
+import { BookingRequestForm } from "@/components/skills/booking-request-form";
 
 export default async function SkillDetailsPage({
   params,
@@ -85,6 +86,30 @@ export default async function SkillDetailsPage({
           </div>
         </CardContent>
       </Card>
+      {currentUser?.id === skill.userId ? (
+        <p className="mt-6 text-sm text-muted-foreground">
+          This is your skill listing. You cannot book a session with yourself.
+        </p>
+      ) : currentUser ? (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Request a session</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <BookingRequestForm skillId={skill.id} />
+          </CardContent>
+        </Card>
+      ) : (
+        <p className="mt-6 text-sm text-muted-foreground">
+          <Link
+            href={`/login?returnUrl=${encodeURIComponent(`/skills/${skill.id}`)}`}
+            className="font-medium text-primary underline"
+          >
+            Sign in
+          </Link>{" "}
+          to request a session.
+        </p>
+      )}
     </div>
   );
 }
