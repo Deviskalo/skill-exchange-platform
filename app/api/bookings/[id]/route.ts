@@ -54,6 +54,12 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       { status: 403 }
     );
   }
+  if (action === "complete" && !isTeacher) {
+    return NextResponse.json(
+      { error: "Only the teacher can mark a session as completed" },
+      { status: 403 }
+    );
+  }
   if (action === "confirm" && booking.status !== "pending") {
     return NextResponse.json(
       { error: "Only pending requests can be confirmed" },
@@ -63,6 +69,18 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   if (action === "decline" && booking.status !== "pending") {
     return NextResponse.json(
       { error: "Only pending requests can be declined" },
+      { status: 409 }
+    );
+  }
+  if (action === "complete" && booking.status !== "confirmed") {
+    return NextResponse.json(
+      { error: "Only confirmed sessions can be completed" },
+      { status: 409 }
+    );
+  }
+  if (action === "complete" && booking.endTime > new Date()) {
+    return NextResponse.json(
+      { error: "A session can only be completed after its scheduled end time" },
       { status: 409 }
     );
   }
@@ -97,7 +115,9 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       ? "confirmed"
       : action === "decline"
         ? "declined"
-        : "cancelled";
+        : action === "complete"
+          ? "completed"
+          : "cancelled";
   await prisma.booking.update({
     where: { id: booking.id },
     data: { status },

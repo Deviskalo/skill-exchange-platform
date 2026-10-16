@@ -34,6 +34,7 @@ export default async function DashboardPage() {
         user: { select: { name: true } },
         teacher: { select: { name: true } },
         skill: { select: { title: true } },
+        review: { select: { id: true } },
       },
       orderBy: { startTime: "asc" },
     }),
@@ -160,11 +161,26 @@ export default async function DashboardPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <BookingActions
-                          bookingId={booking.id}
-                          isTeacher={booking.teacherId === user.id}
-                          status={booking.status}
-                        />
+                        <div className="space-y-2">
+                          <BookingActions
+                            bookingId={booking.id}
+                            isTeacher={booking.teacherId === user.id}
+                            status={booking.status}
+                          />
+                          {booking.status === "completed" &&
+                            booking.userId === user.id &&
+                            (booking.review ? (
+                              <span className="text-sm text-muted-foreground">
+                                Reviewed
+                              </span>
+                            ) : (
+                              <Button asChild variant="outline" size="sm">
+                                <Link href={`/bookings/${booking.id}/review`}>
+                                  Leave review
+                                </Link>
+                              </Button>
+                            ))}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

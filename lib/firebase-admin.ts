@@ -8,20 +8,20 @@ const serviceAccountConfig = {
   privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
 };
 
-console.log("Firebase Admin Config:", {
-  projectId: !!serviceAccountConfig.projectId,
-  clientEmail: !!serviceAccountConfig.clientEmail,
-  privateKey: serviceAccountConfig.privateKey ? "PRESENT" : "MISSING",
-});
+if (
+  !serviceAccountConfig.projectId ||
+  !serviceAccountConfig.clientEmail ||
+  !serviceAccountConfig.privateKey
+) {
+  throw new Error(
+    "Firebase Admin requires FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY"
+  );
+}
 
 if (!admin.apps.length) {
-  try {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccountConfig),
-    });
-  } catch (error) {
-    console.error("Firebase Admin Initialization Error:", error);
-  }
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccountConfig),
+  });
 }
 
 export default admin;

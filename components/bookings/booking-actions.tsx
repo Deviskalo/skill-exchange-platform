@@ -19,7 +19,9 @@ export function BookingActions({
   const [error, setError] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
-  async function updateBooking(action: "confirm" | "decline" | "cancel") {
+  async function updateBooking(
+    action: "confirm" | "decline" | "cancel" | "complete"
+  ) {
     setError("");
     setIsUpdating(true);
     try {
@@ -69,6 +71,15 @@ export function BookingActions({
               Decline
             </Button>
           </>
+        )}
+        {isTeacher && status === "confirmed" && (
+          <Button
+            size="sm"
+            disabled={isUpdating}
+            onClick={() => updateBooking("complete")}
+          >
+            Mark completed
+          </Button>
         )}
         {(!isTeacher || status === "confirmed") && (
           <Button

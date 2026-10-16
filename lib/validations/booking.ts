@@ -6,5 +6,10 @@ export const createBookingSchema = z.object({
 });
 
 export const updateBookingSchema = z.object({
-  action: z.enum(["confirm", "decline", "cancel"]),
+  action: z.enum(["confirm", "decline", "cancel", "complete"]),
+});
+
+export const createReviewSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().trim().min(10).max(1000),
 });

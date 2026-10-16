@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { getAuth } from "firebase-admin/auth";
+import admin from "@/lib/firebase-admin";
 import { prisma } from "@/lib/prisma";
 
 export async function getSessionUser() {
@@ -12,7 +12,7 @@ export async function getSessionUser() {
 
   let decodedToken;
   try {
-    decodedToken = await getAuth().verifySessionCookie(sessionCookie, true);
+    decodedToken = await admin.auth().verifySessionCookie(sessionCookie, true);
   } catch (error) {
     if (
       typeof error === "object" &&

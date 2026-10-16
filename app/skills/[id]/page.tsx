@@ -13,12 +13,19 @@ export default async function SkillDetailsPage({
 }: {
   params: { id: string };
 }) {
-  const [skill, currentUser] = await Promise.all([
+  const [skill, currentUser, reviews] = await Promise.all([
     prisma.skill.findUnique({
       where: { id: params.id },
       include: { category: true, user: true },
     }),
     getSessionUser(),
+    prisma.review.findMany({
+      where: {
+        booking: { skillId: params.id, status: "completed" },
+      },
+      include: { user: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
 
   if (!skill) {
@@ -86,6 +93,49 @@ export default async function SkillDetailsPage({
           </div>
         </CardContent>
       </Card>
+      <section className="mt-8 space-y-4" aria-labelledby="reviews-heading">
+        <div>
+          <h2 id="reviews-heading" className="text-2xl font-semibold">
+            Reviews
+          </h2>
+          {reviews.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {(
+                reviews.reduce((total, review) => total + review.rating, 0) /
+                reviews.length
+              ).toFixed(1)}{" "}
+              out of 5 ({reviews.length}{" "}
+              {reviews.length === 1 ? "review" : "reviews"})
+            </p>
+          )}
+        </div>
+        {reviews.length === 0 ? (
+          <p className="text-muted-foreground">No reviews yet.</p>
+        ) : (
+          reviews.map((review) => (
+            <Card key={review.id}>
+              <CardContent className="space-y-2 pt-6">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="font-medium">
+                    {review.user.name || "SkillSwap learner"}
+                  </p>
+                  <p
+                    className="text-sm"
+                    aria-label={`${review.rating} out of 5 stars`}
+                  >
+                    {"★".repeat(review.rating)}
+                    {"☆".repeat(5 - review.rating)}
+                  </p>
+                </div>
+                <p className="text-muted-foreground">{review.comment}</p>
+                <p className="text-xs text-muted-foreground">
+                  {review.createdAt.toLocaleDateString()}
+                </p>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </section>
       {currentUser?.id === skill.userId ? (
         <p className="mt-6 text-sm text-muted-foreground">
           This is your skill listing. You cannot book a session with yourself.
