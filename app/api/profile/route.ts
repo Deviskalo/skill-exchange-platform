@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/server";
+import { isModerator } from "@/lib/auth/is-moderator";
 import { z } from "zod";
 
 const profileSchema = z.object({
@@ -53,6 +54,7 @@ export async function GET() {
     return NextResponse.json({
       name: user.name,
       imageUrl: user.imageUrl,
+      isModerator: isModerator(user.email),
     });
   } catch (error) {
     console.error("Profile retrieval error:", error);

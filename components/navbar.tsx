@@ -12,19 +12,29 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { BookOpen, LogOut, User, Menu, X } from "lucide-react";
+import {
+  BookOpen,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  ShieldAlert,
+  User,
+  X,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 
 export default function Navbar() {
   const [user] = useAuthState(auth);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [isModerator, setIsModerator] = useState(false);
   const { theme, setTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
       setProfileImageUrl(null);
+      setIsModerator(false);
       return;
     }
 
@@ -36,6 +46,7 @@ export default function Navbar() {
         }
         const profile = await response.json();
         setProfileImageUrl(profile.imageUrl || null);
+        setIsModerator(profile.isModerator === true);
       })
       .catch((error: unknown) => {
         if (error instanceof Error && error.name === "AbortError") {
@@ -107,10 +118,26 @@ export default function Navbar() {
                   </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <Link href="/profile">Profile</Link>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">
+                    <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  {isModerator && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin">
+                        <ShieldAlert className="mr-2 h-4 w-4" />
+                        Admin
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
                     onClick={async () => {
                       try {
@@ -166,7 +193,33 @@ export default function Navbar() {
               >
                 Teach
               </Link>
-              {!user && (
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="block px-3 py-2 text-base font-medium"
+                    onClick={toggleMobileMenu}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="block px-3 py-2 text-base font-medium"
+                    onClick={toggleMobileMenu}
+                  >
+                    Profile
+                  </Link>
+                  {isModerator && (
+                    <Link
+                      href="/admin"
+                      className="block px-3 py-2 text-base font-medium"
+                      onClick={toggleMobileMenu}
+                    >
+                      Admin
+                    </Link>
+                  )}
+                </>
+              ) : (
                 <Link
                   href="/login"
                   className="block px-3 py-2 text-base font-medium"

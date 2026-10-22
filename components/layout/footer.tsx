@@ -26,6 +26,9 @@ export function Footer() {
                 <Link href="/teach">Teach</Link>
               </li>
               <li>
+                <Link href="/dashboard">Dashboard</Link>
+              </li>
+              <li>
                 <Link href="/how-it-works">How It Works</Link>
               </li>
             </ul>
