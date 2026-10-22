@@ -1,123 +1,229 @@
+<div align="center">
+
 # SkillSwap
 
-Have you ever wanted to learn a new skill or share your expertise with others? SkillSwap is the perfect platform for you! Whether you're exploring a new interest, building practical skills, or looking for a fresh perspective, SkillSwap makes it easier to connect with people who can help you grow.
+### Share what you know. Learn what you love.
 
-SkillSwap is a platform for exchanging skills and knowledge. Connect with people worldwide to teach what you know and learn what you love. Create a profile, share the skills you can offer, and discover people with experience in the topics you want to explore. From creative hobbies to professional know-how, every exchange is an opportunity to learn together.
+An online community for people to teach skills, discover learning partners, and coordinate one-to-one sessions.
 
-At SkillSwap, we believe that learning is a lifelong process, and we're here to help you take your skills to the next level. Find a learning partner, arrange a session that works for you, and build confidence through hands-on knowledge sharing. By bringing learners and teachers together, SkillSwap helps make learning more collaborative, approachable, and rewarding.
+[![Stars](https://img.shields.io/github/stars/Deviskalo/skill-exchange-platform?style=social)](https://github.com/Deviskalo/skill-exchange-platform/stargazers)
+[![Forks](https://img.shields.io/github/forks/Deviskalo/skill-exchange-platform?style=social)](https://github.com/Deviskalo/skill-exchange-platform/network/members)
+[![Contributors](https://img.shields.io/github/contributors/Deviskalo/skill-exchange-platform)](https://github.com/Deviskalo/skill-exchange-platform/graphs/contributors)
+[![Issues](https://img.shields.io/github/issues/Deviskalo/skill-exchange-platform)](https://github.com/Deviskalo/skill-exchange-platform/issues)
+[![License](https://img.shields.io/github/license/Deviskalo/skill-exchange-platform)](LICENSE)
 
-![SkillSwap](/public/skillSwap_banner.png)
+[Explore the app](#-what-is-skillswap) · [Features](#-features) · [Roadmap](ROADMAP.md) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
-## Features
+![SkillSwap banner](public/skillSwap_banner.png)
 
-- 🔐 Authentication with Email/Password and Google
-- 👥 User Profiles
-- 🎯 Skill Categories
-- 📚 Skill Sharing
-- 📅 Session Booking
-- ⭐ Reviews System
+</div>
 
-## Tech Stack
+## Contents
 
-- Next.js 14
-- React 18
-- Tailwind CSS
-- shadcn/ui
-- Firebase Auth
-- MongoDB
-- Prisma ORM
+- [What is SkillSwap?](#-what-is-skillswap)
+- [How an exchange works](#-how-an-exchange-works)
+- [Features](#-features)
+- [Technology](#-technology)
+- [Project status](#-project-status)
+- [Get started](#-get-started)
+- [Environment variables](#-environment-variables)
+- [Database and sample data](#-database-and-sample-data)
+- [Quality checks](#-quality-checks)
+- [Contributing](#-contributing)
+- [Roadmap](#-roadmap)
+- [Changelog](#-changelog)
+- [Security and privacy](#-security-and-privacy)
+- [License and acknowledgments](#-license-and-acknowledgments)
 
-## Getting Started
+## 🌱 What is SkillSwap?
 
-1. Clone the repository
+SkillSwap is a skill-sharing platform built around peer-to-peer learning. Members can create profiles, offer skills, find topics they want to learn, and request sessions with other members. Booking conversations help participants coordinate, while reviews and listing reports provide basic trust and safety tools.
+
+The application is built with Next.js App Router. Database-backed pages use server components where appropriate, and authenticated changes go through server routes that validate the session and request.
+
+## 🔄 How an exchange works
+
+```mermaid
+flowchart LR
+    A[Create an account] --> B[Build your profile]
+    B --> C[Publish or discover a skill]
+    C --> D[Request a session]
+    D --> E[Confirm or propose a new time]
+    E --> F[Coordinate in the booking thread]
+    F --> G[Complete the session]
+    G --> H[Leave a review]
+```
+
+Sessions are scheduled as one-hour bookings. The requested time zone is stored with the booking so participants can see the intended local context.
+
+## ✨ Features
+
+### Accounts and profiles
+
+- Email/password registration and sign-in, plus Google and GitHub sign-in providers.
+- Server-created Firebase session cookies for authenticated server requests.
+- Firebase identity synchronization with the MongoDB user record.
+- Profile name, biography, learning interests, and avatar management.
+- Avatar files are size-limited and stored as data URLs in MongoDB; Firebase Storage is not required.
+- Password changes are handled through Firebase Authentication and require reauthentication.
+
+### Skill discovery and listings
+
+- Create, edit, view, and browse skill listings.
+- Organize listings by category and tags.
+- Search and filter listings in the browse view.
+- Home page sections for popular categories, recent listings, and top contributors.
+- Authenticated listing changes are handled by server endpoints, with ownership checks for edits.
+
+### Booking and coordination
+
+- Request a one-hour session with a skill provider at a future date and time.
+- Validate time zones, prevent booking your own listing, and check for conflicting confirmed sessions.
+- Limit repeated booking requests and prevent duplicate active requests for the same skill.
+- Teachers can confirm or decline pending requests; participants can cancel eligible bookings.
+- Participants can propose, accept, or decline a new time for an upcoming confirmed session.
+- Booking conversation threads are available to the booking participants.
+- Teachers can mark a confirmed session complete after its scheduled end time.
+- Learners can review completed sessions.
+- Dashboard overview of offered skills, bookings, and booking actions that need attention.
+
+### Trust and safety
+
+- Members can report skill listings, with duplicate and per-day report limits.
+- Moderators can review reports and update their status.
+- Moderator access is controlled by the `MODERATOR_EMAILS` environment variable.
+- Server endpoints validate participant access and action permissions for booking and report operations.
+
+### Supporting pages
+
+The app also includes informational pages for how it works, help, contact, safety, privacy, cookies, and terms.
+
+## 🧰 Technology
+
+| Area | Technology |
+| --- | --- |
+| Web framework | Next.js 14 App Router |
+| UI | React 18, Tailwind CSS, shadcn/ui and Radix UI |
+| Identity | Firebase Authentication and Firebase Admin |
+| Database access | Prisma ORM |
+| Database | MongoDB |
+| Validation | Zod |
+| Forms | React Hook Form |
+
+## 📍 Project status
+
+**Current stage: feature-complete foundation; integration and real-world validation remain.**
+
+The repository contains the main user journey—accounts, profiles, listings, booking lifecycle, coordination, reviews, and report moderation. A production build and TypeScript check have passed in the current development environment. That verifies compilation and type correctness, but does **not** establish that the entire product has been exercised against a live Firebase project and MongoDB database with multiple users.
+
+See the [project roadmap](ROADMAP.md) for what is complete, what should happen next, and longer-term ideas.
+
+## 🚀 Get started
+
+### Requirements
+
+- Node.js and npm
+- A MongoDB database (for example, MongoDB Atlas)
+- A Firebase project with Authentication providers configured
+- Firebase Admin service-account values for server-side session verification
+
+### Install and configure
 
 ```bash
 git clone https://github.com/Deviskalo/skill-exchange-platform.git
 cd skill-exchange-platform
-```
-
-2. Install dependencies
-
-```bash
 npm install
 ```
 
-```bash
-yarn
-```
+Create `.env.local` at the repository root and add the variables listed in [Environment variables](#-environment-variables). Do not commit this file.
 
-```bash
-bun install
-```
-
-```bash
-pnpm install
-```
-
-3. Set up environment variables
-
-```bash
-cp .env.example .env
-```
-
-4. Add your environment variables to `.env`:
-
-```
-# Database
-DATABASE_URL="mongodb+srv://<username>:<password>@<cluster>/<database>?retryWrites=true&w=majority"
-
-# Firebase client configuration
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-
-# Firebase Admin SDK service account (server-only)
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-```
-
-The Admin SDK values are required for server-side session cookies and should
-come from a Firebase service account. Do not expose them with `NEXT_PUBLIC_`
-prefixes or commit the populated `.env` file.
-
-Profile avatars are stored as small data URLs in MongoDB and do not require
-Firebase Storage or a Firebase billing-plan upgrade. Avatar uploads are limited
-to 1 MB to keep the user records within MongoDB's document size limit.
-
-5. Initialize the database
+Generate the Prisma client and synchronize the MongoDB schema:
 
 ```bash
 npx prisma generate
 npx prisma db push
 ```
 
-6. Run the development server
+Start the development server:
 
 ```bash
 npm run dev
 ```
 
-## License
+Open [http://localhost:3000](http://localhost:3000).
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 🔐 Environment variables
 
-## Acknowledgments
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | MongoDB connection string. Include a database name in the URI path. |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Yes | Firebase web app configuration. |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Yes | Firebase web app configuration. |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Yes | Firebase web app configuration. |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | No | Firebase web app configuration; Firebase Storage is not used for avatars. |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Yes | Firebase web app configuration. |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Yes | Firebase web app configuration. |
+| `FIREBASE_PROJECT_ID` | Yes | Firebase Admin service account project ID. |
+| `FIREBASE_CLIENT_EMAIL` | Yes | Firebase Admin service account client email. |
+| `FIREBASE_PRIVATE_KEY` | Yes | Firebase Admin service account private key. Preserve newlines as `\n` in env files. |
+| `MODERATOR_EMAILS` | No | Comma-separated email allowlist for report moderation. |
 
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Next.js](https://nextjs.org/)
-- [Firebase](https://firebase.google.com/)
-- [MongoDB](https://www.mongodb.com/)
-- [Prisma](https://www.prisma.io/)
+Use `.env.example` as a template. Keep Firebase Admin credentials server-only; never prefix them with `NEXT_PUBLIC_` or commit populated environment files. For profile images, the app stores small data URLs in MongoDB and limits uploads to 1 MB; this avoids requiring a paid Firebase Storage plan.
 
-## Contact
+## 🗃️ Database and sample data
 
-If you have any questions or feedback, please don't hesitate to contact me on Github at [Deviskalo](https://github.com/Deviskalo). You can email me at: [[Dev Iskalo](mailto:deviskalo2000@gmail.com)](mailto:deviskalo2000@gmail.com).
+The Prisma schema is in [`prisma/schema.prisma`](prisma/schema.prisma). After configuring `DATABASE_URL`, initialize the schema with:
 
-Or the team at: [[Iskalo Tech](mailto:iskalotech@gmail.com)](mailto:iskalotech@gmail.com)
+```bash
+npx prisma generate
+npx prisma db push
+```
 
-Have a great day!
+The repository includes a Prisma seed script. To load its sample data:
+
+```bash
+npx prisma db seed
+```
+
+Prisma commands must run in an environment where `DATABASE_URL` is available. The seed data is for development and should not be treated as production user content.
+
+## ✅ Quality checks
+
+Run the checks before submitting a change:
+
+```bash
+npx tsc --noEmit
+npm run lint
+npm run build
+```
+
+The project currently does not define an automated end-to-end test suite. See the [roadmap](ROADMAP.md) for the planned integration and journey validation work.
+
+## 🤝 Contributing
+
+Contributions, bug reports, and feature ideas are welcome. Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) for the development workflow and pull request checklist.
+
+## 🗺️ Roadmap
+
+The roadmap separates implemented foundations from the validation work needed next and future product opportunities. View [`ROADMAP.md`](ROADMAP.md).
+
+## 📝 Changelog
+
+See [`CHANGELOG.md`](CHANGELOG.md) for notable project changes.
+
+## 🛡️ Security and privacy
+
+- Never commit credentials, `.env`, `.env.local`, service-account JSON, or private keys.
+- Report security issues privately to the repository owner rather than publishing exploitable details in an issue.
+- Profile avatars are stored in MongoDB as data URLs. Keep the upload size limit in mind when evaluating database document size.
+- Firebase Authentication and Firebase Admin configuration are required for authenticated features.
+
+## 📄 License and acknowledgments
+
+This project is distributed under the MIT License. See [`LICENSE`](LICENSE).
+
+Thanks to the projects and communities behind [Next.js](https://nextjs.org/), [React](https://react.dev/), [Firebase](https://firebase.google.com/), [MongoDB](https://www.mongodb.com/), [Prisma](https://www.prisma.io/), [Tailwind CSS](https://tailwindcss.com/), and [shadcn/ui](https://ui.shadcn.com/).
+
+---
+
+Built by [Dev Iskalo](https://github.com/Deviskalo) and contributors. If SkillSwap is useful to you, consider [starring the repository](https://github.com/Deviskalo/skill-exchange-platform/stargazers).

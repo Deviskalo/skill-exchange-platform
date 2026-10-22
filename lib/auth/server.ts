@@ -1,12 +1,12 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import admin from "@/lib/firebase-admin";
+import admin, { isFirebaseAdminConfigured } from "@/lib/firebase-admin";
 import { prisma } from "@/lib/prisma";
 
 export async function getSessionUser() {
   const sessionCookie = cookies().get("session")?.value;
-  if (!sessionCookie) {
+  if (!sessionCookie || !isFirebaseAdminConfigured()) {
     return null;
   }
 

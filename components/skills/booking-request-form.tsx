@@ -33,6 +33,7 @@ export function BookingRequestForm({ skillId }: BookingRequestFormProps) {
         body: JSON.stringify({
           skillId,
           startTime: new Date(startTime).toISOString(),
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }),
       });
       const result = await response.json();
@@ -67,7 +68,9 @@ export function BookingRequestForm({ skillId }: BookingRequestFormProps) {
           onChange={(event) => setStartTime(event.target.value)}
         />
         <p className="mt-1 text-sm text-muted-foreground">
-          Sessions are one hour. Your request stays pending until the teacher responds.
+          Sessions are one hour. The selected time uses your local time zone (
+          {Intl.DateTimeFormat().resolvedOptions().timeZone}). Your request stays
+          pending until the teacher responds.
         </p>
       </div>
       {error && (

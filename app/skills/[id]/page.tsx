@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSessionUser } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
 import { BookingRequestForm } from "@/components/skills/booking-request-form";
+import { ReportSkillForm } from "@/components/skills/report-skill-form";
 
 export default async function SkillDetailsPage({
   params,
@@ -160,6 +161,16 @@ export default async function SkillDetailsPage({
           </Link>{" "}
           to request a session.
         </p>
+      )}
+      {currentUser && currentUser.id !== skill.userId && (
+        <Card className="mt-6 border-muted">
+          <CardHeader>
+            <CardTitle className="text-base">Safety concern?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ReportSkillForm skillId={skill.id} />
+          </CardContent>
+        </Card>
       )}
     </div>
   );

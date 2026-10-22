@@ -9,19 +9,22 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid()) @map("_id")
-  email         String    @unique
-  firebaseUid   String?   @unique
-  name          String?
-  bio           String?
-  learningInterests String[] @default([])
-  imageUrl      String?
-  skills        Skill[]   @relation("UserSkills")
-  bookings      Booking[] @relation("UserBookings")
-  teachBookings Booking[] @relation("TeacherBookings")
-  reviews       Review[]  @relation("UserReviews")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                String           @id @default(cuid()) @map("_id")
+  email             String           @unique
+  firebaseUid       String?          @unique
+  name              String?
+  bio               String?
+  learningInterests String[]         @default([])
+  imageUrl          String?
+  skills            Skill[]          @relation("UserSkills")
+  bookings          Booking[]        @relation("UserBookings")
+  teachBookings     Booking[]        @relation("TeacherBookings")
+  reviews           Review[]         @relation("UserReviews")
+  bookingMessages   BookingMessage[] @relation("BookingMessageSender")
+  reportsFiled      Report[]         @relation("ReportReporter")
+  reportsReceived   Report[]         @relation("ReportTarget")
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 }
 
 model Category {
@@ -44,24 +47,55 @@ model Skill {
   userId      String
   user        User      @relation("UserSkills", fields: [userId], references: [id])
   bookings    Booking[]
+  reports     Report[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
 
 model Booking {
+  id                      String           @id @default(cuid()) @map("_id")
+  userId                  String
+  teacherId               String
+  skillId                 String
+  startTime               DateTime
+  endTime                 DateTime
+  timeZone                String?
+  proposedStartTime       DateTime?
+  proposedTimeZone        String?
+  rescheduleRequestedById String?
+  status                  String           @default("pending")
+  user                    User             @relation("UserBookings", fields: [userId], references: [id])
+  teacher                 User             @relation("TeacherBookings", fields: [teacherId], references: [id])
+  skill                   Skill            @relation(fields: [skillId], references: [id])
+  review                  Review?
+  messages                BookingMessage[]
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+}
+
+model BookingMessage {
   id        String   @id @default(cuid()) @map("_id")
-  userId    String
-  teacherId String
-  skillId   String
-  startTime DateTime
-  endTime   DateTime
-  status    String   @default("pending")
-  user      User     @relation("UserBookings", fields: [userId], references: [id])
-  teacher   User     @relation("TeacherBookings", fields: [teacherId], references: [id])
-  skill     Skill    @relation(fields: [skillId], references: [id])
-  review    Review?
+  bookingId String
+  senderId  String
+  body      String
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  sender    User     @relation("BookingMessageSender", fields: [senderId], references: [id])
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+}
+
+model Report {
+  id           String   @id @default(cuid()) @map("_id")
+  reporterId   String
+  targetUserId String?
+  skillId      String?
+  reason       String
+  details      String?
+  status       String   @default("open")
+  reporter     User     @relation("ReportReporter", fields: [reporterId], references: [id])
+  targetUser   User?    @relation("ReportTarget", fields: [targetUserId], references: [id])
+  skill        Skill?   @relation(fields: [skillId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Review {

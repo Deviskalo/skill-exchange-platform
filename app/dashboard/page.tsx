@@ -39,6 +39,12 @@ export default async function DashboardPage() {
       orderBy: { startTime: "asc" },
     }),
   ]);
+  const actionRequiredBookings = bookings.filter(
+    (booking) =>
+      (booking.status === "pending" && booking.teacherId === user.id) ||
+      (booking.proposedStartTime &&
+        booking.rescheduleRequestedById !== user.id)
+  );
 
   return (
     <div className="container mx-auto space-y-6 p-6">
@@ -107,6 +113,29 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
+      {actionRequiredBookings.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Action needed</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              You have {actionRequiredBookings.length} booking
+              {actionRequiredBookings.length === 1 ? "" : "s"} waiting for your response.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {actionRequiredBookings.map((booking) => (
+                <Button key={booking.id} asChild variant="outline" size="sm">
+                  <Link href={`/bookings/${booking.id}`}>
+                    {booking.skill.title} conversation
+                  </Link>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>My Bookings</CardTitle>
@@ -145,7 +174,14 @@ export default async function DashboardPage() {
                         </Link>
                       </TableCell>
                       <TableCell>
-                        {booking.startTime.toLocaleString()}
+                        {new Intl.DateTimeFormat(undefined, {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                          timeZone: booking.timeZone || "UTC",
+                        }).format(booking.startTime)}
+                        <span className="block text-xs text-muted-foreground">
+                          {booking.timeZone || "UTC"}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -166,7 +202,17 @@ export default async function DashboardPage() {
                             bookingId={booking.id}
                             isTeacher={booking.teacherId === user.id}
                             status={booking.status}
+                            isRescheduleRequester={
+                              booking.rescheduleRequestedById === user.id
+                            }
+                            proposedStartTime={
+                              booking.proposedStartTime?.toISOString() || null
+                            }
+                            proposedTimeZone={booking.proposedTimeZone}
                           />
+                          <Button asChild variant="ghost" size="sm">
+                            <Link href={`/bookings/${booking.id}`}>Messages</Link>
+                          </Button>
                           {booking.status === "completed" &&
                             booking.userId === user.id &&
                             (booking.review ? (

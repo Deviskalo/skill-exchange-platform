@@ -10,6 +10,8 @@ const profileSchema = z.object({
 
 const maxAvatarSize = 1 * 1024 * 1024;
 
+export const dynamic = "force-dynamic";
+
 function getImageContentType(bytes: Buffer) {
   if (
     bytes.length >= 3 &&
