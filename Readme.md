@@ -1,10 +1,10 @@
 # SkillSwap
 
-Have you ever wanted to learn a new skill or share your expertise with others? SkillSwap is the perfect platform for you!
+Have you ever wanted to learn a new skill or share your expertise with others? SkillSwap is the perfect platform for you! Whether you're exploring a new interest, building practical skills, or looking for a fresh perspective, SkillSwap makes it easier to connect with people who can help you grow.
 
-A platform for exchanging skills and knowledge with others. Connect with people worldwide to teach what you know and learn what you love.
+SkillSwap is a platform for exchanging skills and knowledge. Connect with people worldwide to teach what you know and learn what you love. Create a profile, share the skills you can offer, and discover people with experience in the topics you want to explore. From creative hobbies to professional know-how, every exchange is an opportunity to learn together.
 
-At SkillSwap, we believe that learning is a lifelong process, and we're here to help you take your skills to the next level.
+At SkillSwap, we believe that learning is a lifelong process, and we're here to help you take your skills to the next level. Find a learning partner, arrange a session that works for you, and build confidence through hands-on knowledge sharing. By bringing learners and teachers together, SkillSwap helps make learning more collaborative, approachable, and rewarding.
 
 ![SkillSwap](/public/skillSwap_banner.png)
 
@@ -83,6 +83,10 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY----
 The Admin SDK values are required for server-side session cookies and should
 come from a Firebase service account. Do not expose them with `NEXT_PUBLIC_`
 prefixes or commit the populated `.env` file.
+
+Profile avatars are stored as small data URLs in MongoDB and do not require
+Firebase Storage or a Firebase billing-plan upgrade. Avatar uploads are limited
+to 1 MB to keep the user records within MongoDB's document size limit.
 
 5. Initialize the database
 

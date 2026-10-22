@@ -77,6 +77,7 @@ export default async function SkillDetailsPage({
                     height={40}
                     alt={skill.user.name || "User"}
                     className="h-10 w-10 rounded-full"
+                    unoptimized
                   />
                 )}
                 <span>{skill.user.name || "Anonymous"}</span>

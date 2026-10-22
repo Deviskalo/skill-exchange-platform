@@ -7,10 +7,9 @@ import {
   updatePassword,
   updateProfile,
 } from "firebase/auth";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import Image from "next/image";
 import Link from "next/link";
-import { auth, storage } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,28 +70,26 @@ export function ProfileClient({ profile, skills }: ProfileClientProps) {
     }
 
     try {
-      let photoURL = previewAvatar;
-      if (avatar) {
-        const storageRef = ref(storage, `avatars/${user.uid}`);
-        await uploadBytes(storageRef, avatar);
-        photoURL = await getDownloadURL(storageRef);
+      const requestBody = avatar ? new FormData() : JSON.stringify({ name });
+      if (avatar && requestBody instanceof FormData) {
+        requestBody.append("name", name);
+        requestBody.append("avatar", avatar);
       }
 
       const response = await fetch("/api/profile", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, ...(photoURL && { photoURL }) }),
+        ...(avatar ? {} : { headers: { "Content-Type": "application/json" } }),
+        body: requestBody,
       });
       const result = await response.json();
       if (!response.ok) {
         throw new Error(result.error || "Failed to update profile");
       }
 
-      await updateProfile(user, {
-        displayName: name,
-        ...(photoURL && { photoURL }),
-      });
+      const photoURL = result.photoURL || previewAvatar;
+      await updateProfile(user, { displayName: name });
       setPreviewAvatar(photoURL);
+      setAvatar(null);
       setSuccess("Profile updated successfully!");
       setError("");
     } catch (updateError) {
@@ -151,7 +148,7 @@ export function ProfileClient({ profile, skills }: ProfileClientProps) {
             </div>
             <Input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/gif"
               onChange={(event) => {
                 const file = event.target.files?.[0];
                 if (file) {
@@ -161,6 +158,9 @@ export function ProfileClient({ profile, skills }: ProfileClientProps) {
               }}
               className="mb-2"
             />
+            <p className="text-xs text-muted-foreground">
+              JPEG, PNG, WebP, or GIF. Maximum size: 1 MB.
+            </p>
           </div>
           <div className="mb-4">
             <label htmlFor="profile-name" className="mb-2 block">

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/auth";
 import { Button } from "@/components/ui/button";
@@ -18,8 +18,34 @@ import { Moon, Sun } from "lucide-react";
 
 export default function Navbar() {
   const [user] = useAuthState(auth);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setProfileImageUrl(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    fetch("/api/profile", { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          return;
+        }
+        const profile = await response.json();
+        setProfileImageUrl(profile.imageUrl || null);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
+        }
+        console.error("Unable to load navbar profile image:", error);
+      });
+
+    return () => controller.abort();
+  }, [user]);
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -72,7 +98,9 @@ export default function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Avatar className="cursor-pointer">
-                    <AvatarImage src={user.photoURL || undefined} />
+                    <AvatarImage
+                      src={profileImageUrl || user.photoURL || undefined}
+                    />
                     <AvatarFallback>
                       {user.displayName?.[0] || user.email?.[0]}
                     </AvatarFallback>

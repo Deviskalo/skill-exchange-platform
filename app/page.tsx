@@ -143,6 +143,7 @@ export default async function Home() {
                       width={32}
                       height={32}
                       className="w-8 h-8 rounded-full"
+                      unoptimized
                     />
                     <span>{skill.user.name}</span>
                   </div>
@@ -177,6 +178,7 @@ export default async function Home() {
                     width={96}
                     height={96}
                     className="w-24 h-24 rounded-full mb-4"
+                    unoptimized
                   />
                   <CardTitle className="text-center">
                     {contributor.name}
